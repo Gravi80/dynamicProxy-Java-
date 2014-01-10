@@ -1,0 +1,73 @@
+Using Java Reflection you create dynamic implementations of interfaces at runtime.
+You do so using the class java.lang.reflect.Proxy.
+
+The name of this class is why I refer to these dynamic interface implementations as dynamic proxies.
+
+Dynamic proxies can be used for many different purposes,
+e.g. database connection and transaction management,
+dynamic mock objects for unit testing, and other AOP-like method intercepting purposes.
+
+
+
+
+Creating Proxies
+----------------
+You create dynamic proxies using the Proxy.newProxyInstance() method.
+The newProxyInstance() methods takes 3 parameters:
+
+The ClassLoader that is to "load" the dynamic proxy class.
+An array of interfaces to implement.
+An InvocationHandler to forward all methods calls on the proxy to.
+
+---------------------------------------------------------------------
+InvocationHandler handler = new MyInvocationHandler();
+MyInterface proxy = (MyInterface) Proxy.newProxyInstance(
+                            MyInterface.class.getClassLoader(),
+                            new Class[] { MyInterface.class },
+                            handler);
+----------------------------------------------------------------------
+
+After running this code the proxy variable contains a dynamic implementation of the MyInterface interface.
+All calls to the proxy will be forwarded to the handler implementation of the general InvocationHandler interface.
+
+
+
+
+InvocationHandler's
+--------------------
+As mentioned earlier you must pass an InvocationHandler implementation to the Proxy.newProxyInstance() method.
+All method calls to the dynamic proxy are forwarded to this InvocationHandler implementation.
+Here is how the InvocationHandler interface looks:
+
+----------------------------------------------------------------------
+public interface InvocationHandler{
+  Object invoke(Object proxy, Method method, Object[] args)
+         throws Throwable;
+}
+----------------------------------------------------------------------
+
+Here is an example implementation:
+-----------------------------------------------------------------------
+public class MyInvocationHandler implements InvocationHandler{
+
+  public Object invoke(Object proxy, Method method, Object[] args)
+  throws Throwable {
+    //do something "dynamic"
+  }
+}
+-----------------------------------------------------------------------
+
+
+
+The proxy parameter passed to the invoke() method is the dynamic proxy object implementing the interface.
+Most often you don't need this object.
+
+The Method object passed into the invoke() method represents the method called on the interface the dynamic proxy implements.
+From the Method object you can obtain the method name, parameter types, return type, etc.
+
+The Object[] args array contains the parameter values passed to the proxy
+when the method in the interface implemented was called.
+Note: Primitives (int, long etc) in the implemented interface are wrapped in their object counterparts (Integer, Long etc.).
+
+
+

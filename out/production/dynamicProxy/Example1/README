@@ -1,0 +1,47 @@
+First, let's show a client interacting with a target object directly,Suppose we have an IVehicle interface,
+A Example1.NoProxy.Car class that implements the IVehicle interface.
+
+         -------------stop()---------------->
+ CLIENT  --------------forward()------------>  CAR(IVehicle)
+         ---------------stop()-------------->
+
+
+
+Let's have the client interact with the target object through a proxy, the main intent of a proxy is to control access
+to the target object, rather than to enhance the functionality of the target object.
+
+         ----------          ---stop()---------->
+ CLIENT  ----------   PROXY  -----forward()------->  CAR(IVehicle)
+         ----------          -----stop()--------->
+
+
+
+                                  Dynamic Proxy Class
+                                 ---------------------
+Each proxy class has one public constructor that takes one argument,
+an implementation of the interface InvocationHandler, to set the invocation handler for a proxy instance.
+
+Rather than having to use the reflection API to access the public constructor,
+a proxy instance can be also be created by calling the Proxy.newInstance() method,
+which combines the actions of calling Proxy.getProxyClass() with invoking the constructor with an invocation handler.
+
+
+                               The java.lang.reflect.Proxy Class
+                              ------------------------------------
+public static Class getProxyClass(ClassLoader loader, Class[] interfaces)
+throws IllegalArgumentException
+
+Creates a proxy class defined in the specified class loader and which implements the specified interfaces.
+In addition, creates an instance of the proxy by invoking the one public proxy constructor
+which sets the associated invocation handler to the specified handler.
+Returns a reference to the proxy instance.
+
+Proxy.newProxyInstance(cl, interfaces, ih); is equivalent to
+Proxy.getProxyClass(cl, interfaces).getConstructor(new Class[] { InvocationHandler.class }).newInstance(new Object[] {ih});
+
+public static InvocationHandler getInvocationHandler (Object proxy)
+throws IllegalArgumentException
+Returns the invocation handler for the specified proxy instance
+
+
+

@@ -1,0 +1,52 @@
+The Proxy is a special class that allows intercept a set of methods identified by an interface.
+You can, for example, intercept all methods of a class to check if an attribute is not null or
+to catch possible exceptions in methods.
+
+Let's create a Sum class
+
+This class will run? It'll find the correct result? Well, being optimistical, yes, it will do.
+But, if a null value was passed as a parameter to the constructor,
+the method sum() will throw a pretty NullPointerException.
+
+Who is catching that?
+Anyone. Who will be using the class never will remember (and wouldn't have) that the method sum() can launch a exception.
+What we can do for solve? We can use reflection to help the user.
+
+First, we need an interface with the method to intercept.
+In our case, the sum().
+
+
+After, we have to create a class that will handle the method call.
+This class will try to run the true method sum() in Sum class, if it fails,
+the NullPointerException must be catched and a zero value must return.
+      "The handle must implement the InvocationHandler interface"       and
+obviously implements the       "public Object invoke(Object proxy, Method method, Object[] args)"       method.
+This method will be called when the user invoke the method sum() in a Proxy class.
+The "try catch" will evict the NullPointerException.
+
+
+
+And now, we must implement a Sum factory.
+An object that will create the true Sum and the proxy class.
+Anyone can create a Sum class without this factory class.
+You can block this action with a private or protected constructor.
+
+
+
+                                        SumFactory
+                                        ----------
+As you can see, this class creates a Sum instance with the params to sum() and
+a handler to intercept the calls in a Proxy class.
+
+The var sum is passed into a Handler constructor to be the responsable to right result.
+
+The method newProxyInstance creates the Proxy class that will change the application flow, repassing responsibilities to handler.
+The var interfacesArray is an array of interfaces that have the methods to handler intercept.
+
+To finish, it's necessary declare Sum class implementing the ISum interface.
+If you don't do this the Proxy class will throw an Exception
+like:
+"Exception in thread "main" java.lang.IllegalArgumentException: object is not an instance of declaring class" on constructor.
+
+
+

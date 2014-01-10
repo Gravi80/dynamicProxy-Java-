@@ -1,0 +1,106 @@
+Dynamic Class Loading and Reloading in Java
+-------------------------------------------
+
+It is possible to load and reload classes at runtime in Java,
+though it is not as straightforward as one might have hoped.
+
+
+The ClassLoader =>
+---------------
+All classes in a Java application are loaded using some subclass of java.lang.ClassLoader.
+Loading classes dynamically must therefore also be done using a java.lang.ClassLoader subclass.
+
+When a class is loaded, all classes it references are loaded too.
+This class loading pattern happens recursively, until all classes needed are loaded.
+This may not be all classes in the application. Unreferenced classes are not loaded until the time they are referenced.
+
+
+The ClassLoader Hierarchy =>
+-------------------------
+Class loaders in Java are organized into a hierarchy.
+When you create a new standard Java ClassLoader you must provide it with a parent ClassLoader.
+If a ClassLoader is asked to load a class, it will ask its parent class loader to load it.
+If the parent class loader can't find the class, the child class loader then tries to load it itself.
+
+
+Class Loading =>
+-------------
+The steps a given class loader uses when loading classes are:
+
+1).Check if the class was already loaded.
+2).If not loaded, ask parent class loader to load the class.
+3).If parent class loader cannot load class, attempt to load it in this class loader.
+
+When you implement a class loader that is capable of reloading classes you will need to deviate a bit from this sequence.
+The classes to reload should not be requested loaded by the parent class loader. More on that later.
+
+
+Dynamic Class Loading
+---------------------
+Loading a class dynamically is easy.
+All you need to do is to obtain a ClassLoader and call its loadClass() method.
+
+check MainClass
+
+
+Dynamic Class Reloading
+------------------------
+Dynamic class reloading is a bit more challenging.
+Java's builtin Class loaders always checks if a class is already loaded before loading it.
+Reloading the class is therefore not possible using Java's builtin class loaders.
+To reload a class you will have to implement your own ClassLoader subclass.
+
+Even with a custom subclass of ClassLoader you have a challenge.
+Every loaded class needs to be linked. This is done using the ClassLoader.resolve() method.
+This method is final, and thus cannot be overridden in your ClassLoader subclass.
+The resolve() method will not allow any given ClassLoader instance to link the same class twice.
+Therefore, everytime you want to reload a class you must use a new instance of your ClassLoader subclass.
+This is not impossible, but necessary to know when designing for class reloading.
+
+
+Designing your Code for Class Reloading
+----------------------------------------
+As stated earlier you cannot reload a class using a ClassLoader that has already loaded that class once.
+Therefore you will have to reload the class using a different ClassLoader instance.
+
+Every class loaded in a Java application is identified by its fully qualified name (package name + class name),
+and the ClassLoader instance that loaded it.
+That means, that a class MyObject loaded by class loader A,
+is not the same class as the MyObject class loaded with class loader B. Look at this code:
+
+
+MyObject object = (MyObject)myClassReloadingFactory.newInstance("com.jenkov.MyObject");
+
+
+Notice how the MyObject class is referenced in the code, as the type of the object variable.
+This causes the MyObject class to be loaded by the same class loader that loaded the class this code is residing in.
+
+If the myClassReloadingFactory object factory reloads the MyObject class using a different class loader than
+the class above code resides in, you cannot cast the instance of the reloaded MyObject class to the MyObject type
+of the object variable.
+Since the two MyObject classes were loaded with different class loaders, the are regarded as different classes,
+even if they have the same fully qualified class name.
+Trying to cast an object of the one class to a reference of the other will result in a ClassCastException.
+
+
+It is possible to work around this limitation but you will have to change your code in either of two ways:
+1).Use an interface as the variable type, and just reload the implementing class.
+2).Use a superclass as the variable type, and just reload a subclass.
+
+Here are two coresponding code examples:
+
+MyObjectInterface object = (MyObjectInterface)myClassReloadingFactory.newInstance("com.jenkov.MyObject");
+MyObjectSuperclass object = (MyObjectSuperclass)myClassReloadingFactory.newInstance("com.jenkov.MyObject");
+
+
+Either of these two methods will work if the type of the variable,
+the interface or superclass, is not reloaded when the implementing class or subclass is reloaded.
+
+To make this work you will of course need to implement your class loader to let the interface or superclass be loaded
+ by its parent. When your class loader is asked to load the MyObject class, it will also be asked to load the
+ MyObjectInterface class, or the MyObjectSuperclass class, since these are referenced from within the MyObject class.
+ Your class loader must delegate the loading of those classes to the same class loader that loaded the class
+ containing the interface or superclass typed variables.
+
+
+
